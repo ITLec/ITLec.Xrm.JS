@@ -1,0 +1,58 @@
+<html>
+<head>
+    <script src="../ClientGlobalContext.js.aspx" type="text/javascript"></script>
+    <script src="itlec_utils.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        function FillOptionSet() {
+            var serverURL = ITLecXrmUtilsURL.GetClientURL();
+
+            var allEntitiesURL = serverURL + "/api/data/v8.0/EntityDefinitions?$select=LogicalName";
+
+            ITLecHTTPUtilsRequest.Get(allEntitiesURL, "fillOptionSet_CallBack");
+        }
+
+        function fillOptionSet_CallBack(data) {
+
+            data.value.sort(function (o1, o2) {
+                var t1 = o1.LogicalName.toLowerCase(), t2 = o2.LogicalName.toLowerCase();
+                return t1 > t2 ? 1 : t1 < t2 ? -1 : 0;
+            });
+
+
+            data.value.forEach(function (item) {
+                ITLecHTMLUtilsControl.AddItem_Option("allEntitiesOptionSet", item.LogicalName, item.LogicalName);
+            });
+        }
+
+        function allEntitiesOptionSet_OnChange()
+        {
+            var val = document.getElementById("allEntitiesOptionSet").value;
+            ITLecXrmUtilsControl.SetControlValue(ITLecXrmUtilsWebResource.GetParam("fieldName"), val);
+        }
+
+
+        function SetOptionSet()
+        {
+            var val = ITLecXrmUtilsControl.GetControlValue(ITLecXrmUtilsWebResource.GetParam("fieldName"));
+            if (val)
+            {
+                ITLecHTMLUtilsControl.SetSelectedItem_Option("allEntitiesOptionSet", val);
+            }
+        }
+    </script>
+</head>
+<body>
+    <script>
+        window.onload = function () {
+            FillOptionSet();
+            SetOptionSet();
+        }
+    </script>
+    <form>
+        <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for names.." title="Type in a name">
+
+        <select id="allEntitiesOptionSet" size="4" onchange="allEntitiesOptionSet_OnChange()"></select>
+    </form>
+
+</body>
+</html>
