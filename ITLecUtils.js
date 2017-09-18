@@ -27,6 +27,15 @@ var ITLecXrmUtilsURL = {
         var serverUrl = GetClientURL();
         var oDataPath = serverUrl + "/XRMServices/2011/OrganizationData.svc";
         return oDataPath;
+    },
+    GetAllEntitiesLogicalNameAPIUrl: function ()
+    {
+
+        var serverURL = ITLecXrmUtilsURL.GetClientURL();
+
+        var allEntitiesURL = serverURL + "/api/data/v8.0/EntityDefinitions?$select=LogicalName";
+
+        return allEntitiesURL;
     }
 };
 
@@ -34,6 +43,36 @@ var ITLecXrmUtilsEntity = {
 
     GetCurrentId: function () {
         return ITLecXrmUtils.GetXrm().Page.data.entity.getId();
+    }
+};
+var ITLecXrmUtilsMetaData = {
+
+    ///GetAllEntitiesLogicalName("FunctionName")
+    /* Function Example
+
+        function fillOptionSet_CallBack(data) {
+
+        }
+    */
+    GetAllEntitiesLogicalNameAsync: function (GetAllEntitiesLogicalName_CallBack) {
+        
+        var allEntitiesURL = ITLecXrmUtilsURL.GetAllEntitiesLogicalNameAPIUrl();
+        
+        ITLecHTTPUtilsRequest.GetAsync(allEntitiesURL, GetAllEntitiesLogicalName_CallBack);
+    },
+    GetAllEntitiesLogicalName: function ()
+    {
+        var allEntitiesURL = ITLecXrmUtilsURL.GetAllEntitiesLogicalNameAPIUrl();
+
+        var data = ITLecHTTPUtilsRequest.GetODataObjectResult(allEntitiesURL);
+
+
+        data.value.sort(function (o1, o2) {
+            var t1 = o1.LogicalName.toLowerCase(), t2 = o2.LogicalName.toLowerCase();
+            return t1 > t2 ? 1 : t1 < t2 ? -1 : 0;
+        });
+
+        return data.value;
     }
 };
 
@@ -103,7 +142,26 @@ var ITLecHTMLUtilsControl = {
 
 var ITLecHTTPUtilsRequest = {
 
-    Post: function (_Url, functionName) {
+    GetODataResponseText: function (url) {
+        
+        if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+            xmlhttp = new XMLHttpRequest();
+        }
+        else {// code for IE6, IE5
+            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        xmlhttp.open("GET", url, false);
+        xmlhttp.setRequestHeader("X-Requested-Width", "XMLHttpRequest");
+        xmlhttp.setRequestHeader("Accept", "application/json, text/javascript, */*");
+        xmlhttp.send(null);
+        return xmlhttp.responseText;
+    },
+    GetODataObjectResult: function (url) {
+        str = ITLecHTTPUtilsRequest.GetODataResponseText(url);
+        var data = eval('(' + str + ')');
+        return data;
+    },
+    PostAsync: function (_Url, functionName) {
         var retrieveReq = new XMLHttpRequest();
 
         retrieveReq.open("POST", _Url, true);
@@ -115,12 +173,12 @@ var ITLecHTTPUtilsRequest = {
         retrieveReq.onreadystatechange = function () { ITLecHTTPUtilsRequest._CallBack(this, functionName); };
         retrieveReq.send();
     },
-    Get: function (_Url, functionName) {
+    GetAsync: function (_Url, functionName) {
         var retrieveReq = new XMLHttpRequest();
         retrieveReq.open("GET", _Url, false);
         retrieveReq.setRequestHeader("Accept", "application/json");
         retrieveReq.setRequestHeader("Content-Type", "application/json; charset=utf-8");
-        
+
         retrieveReq.onreadystatechange = function () { ITLecHTTPUtilsRequest._CallBack(this, functionName); };
         retrieveReq.send();
     },
@@ -138,4 +196,84 @@ var ITLecHTTPUtilsRequest = {
             }
         }
     }
+};
+
+var ITLecXrmUtilsTextBox = {
+    
+
+    SetAutoComplete: function (fieldName, arr) {
+        
+
+        /*
+        arr = [
+            { name: 'A. Datum Corporation', code: 'A01' },
+            { name: 'Adventure Works Cycles', code: 'A02' }
+        ];*/
+
+        var keyPressFcn = function (ext) {
+            try {
+                var userInput = ITLecXrmUtils.GetXrm().Page.getControl(fieldName).getValue();
+                resultSet = {
+                    results: new Array(),
+                    commands: {
+                        id: "sp_commands",
+                        label: "Learn More",
+                        action: function () {
+                            // Specify what you want to do when the user
+                            // clicks the "Learn More" link at the bottom
+                            // of the auto-completion list.
+                            // For this sample, we are just opening a page
+                            // that provides information on working with
+                            // accounts in CRM.
+                            window.open("www.itlec.com");
+                        }
+                    }
+                };
+
+                var userInputLowerCase = userInput.toLowerCase();
+                for (i = 0; i < arr.length; i++) {
+                    if (userInputLowerCase === arr[i].name.substring(0, userInputLowerCase.length).toLowerCase()) {
+                        resultSet.results.push({
+                            id: i,
+                            fields: [arr[i].name]
+                        });
+                    }
+                    if (resultSet.results.length >= 10) break;
+                }
+
+                if (resultSet.results.length > 0) {
+                    ext.getEventSource().showAutoComplete(resultSet);
+                } else {
+                    ext.getEventSource().hideAutoComplete();
+                }
+            } catch (e) {
+                // Handle any exceptions. In the sample code,
+                // we are just displaying the exception, if any.
+                console.log(e);
+            }
+        };
+
+        ITLecXrmUtils.GetXrm().Page.getControl(fieldName).addOnKeyPress(keyPressFcn);
+    },
+
+    SetAutoCompleteWithEntityNames: function (fieldName) {
+
+
+        var arr = ITLecXrmUtilsMetaData.GetAllEntitiesLogicalName();
+
+       var  newArr = new Array();
+
+       arr.value.forEach(function (item) {
+
+            var obj = new Object();
+
+            obj.code = item.LogicalName;
+            obj.name = item.LogicalName;
+
+       });
+
+       ITLecXrmUtilsTextBox.SetAutoComplete(fieldName, newArr);
+    }
+
+
 };
