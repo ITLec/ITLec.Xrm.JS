@@ -45,6 +45,7 @@ var ITLecXrmUtilsEntity = {
         return ITLecXrmUtils.GetXrm().Page.data.entity.getId();
     }
 };
+
 var ITLecXrmUtilsMetaData = {
 
     ///GetAllEntitiesLogicalName("FunctionName")
@@ -232,13 +233,14 @@ var ITLecXrmUtilsTextBox = {
 
                 var userInputLowerCase = userInput.toLowerCase();
                 for (i = 0; i < arr.length; i++) {
-                    if (userInputLowerCase === arr[i].name.substring(0, userInputLowerCase.length).toLowerCase()) {
+                    // if (userInputLowerCase === arr[i].name.substring(0, userInputLowerCase.length).toLowerCase()) {
+                    if (arr[i].name.toLowerCase().indexOf( userInputLowerCase)!= -1 ) {
                         resultSet.results.push({
                             id: i,
                             fields: [arr[i].name]
                         });
                     }
-                    if (resultSet.results.length >= 10) break;
+                    if (resultSet.results.length >= 20) break;
                 }
 
                 if (resultSet.results.length > 0) {
@@ -257,21 +259,17 @@ var ITLecXrmUtilsTextBox = {
     },
 
     SetAutoCompleteWithEntityNames: function (fieldName) {
-
-
+        
         var arr = ITLecXrmUtilsMetaData.GetAllEntitiesLogicalName();
 
        var  newArr = new Array();
 
-       arr.value.forEach(function (item) {
-
+       arr.forEach(function (item) {
             var obj = new Object();
-
             obj.code = item.LogicalName;
             obj.name = item.LogicalName;
-
+            newArr.push(obj);
        });
-
        ITLecXrmUtilsTextBox.SetAutoComplete(fieldName, newArr);
     }
 
