@@ -55,6 +55,7 @@ var ITLecXrmUtilsMetaData = {
 
         }
     */
+   //  ArrAllEntitiesLogicalName,
     GetAllEntitiesLogicalNameAsync: function (GetAllEntitiesLogicalName_CallBack) {
         
         var allEntitiesURL = ITLecXrmUtilsURL.GetAllEntitiesLogicalNameAPIUrl();
@@ -63,6 +64,7 @@ var ITLecXrmUtilsMetaData = {
     },
     GetAllEntitiesLogicalName: function ()
     {
+        //if (ArrAllEntitiesLogicalName)
         var allEntitiesURL = ITLecXrmUtilsURL.GetAllEntitiesLogicalNameAPIUrl();
 
         var data = ITLecHTTPUtilsRequest.GetODataObjectResult(allEntitiesURL);
@@ -126,21 +128,37 @@ var ITLecXrmUtilsControl = {
     }
 };
 
-var ITLecHTMLUtilsControl = {
+var ITLecHTMLUtilsControlOption = {
 
-    AddItem_Option: function (optionId, optionText, optionValue) {
+    AddItem: function (optionId, optionText, optionValue) {
         var x = document.getElementById(optionId);
         var option = document.createElement("option");
         option.text = optionText;
         option.value = optionValue;
         x.add(option);
     },
-    SetSelectedItem_Option: function (optionId, valueToSelect) {
+    SetSelectedItem: function (optionId, valueToSelect) {
         var element = document.getElementById(optionId);
         element.value = valueToSelect;
+    },
+    Clear: function (optionId)
+    {
+       var optionControl= document.getElementById(optionId);
+        var i;
+        for (i = optionControl.options.length - 1; i >= 0; i--) {
+            optionControl.remove(i);
+        }
     }
 };
 
+var ITLecHTMLUtilsControl =
+    {
+        GetValue: function (controlId)
+        {
+            var val = document.getElementById(controlId).value;
+            return val;
+        }
+    };
 var ITLecHTTPUtilsRequest = {
 
     GetODataResponseText: function (url) {

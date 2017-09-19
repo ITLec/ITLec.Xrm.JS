@@ -3,26 +3,21 @@
     <script src="../ClientGlobalContext.js.aspx" type="text/javascript"></script>
     <script src="itlec_utils.js" type="text/javascript"></script>
     <script type="text/javascript">
+
+        var ArrEntitiesLogicalName;
+
         function FillOptionSet() {
-         /*   var serverURL = ITLecXrmUtilsURL.GetClientURL();
-
-            var allEntitiesURL = serverURL + "/api/data/v8.0/EntityDefinitions?$select=LogicalName";
-
-            ITLecHTTPUtilsRequest.Get(allEntitiesURL, "fillOptionSet_CallBack");*/
             ITLecXrmUtilsMetaData.GetAllEntitiesLogicalNameAsync("fillOptionSet_CallBack");
-
         }
 
         function fillOptionSet_CallBack(data) {
-
             data.value.sort(function (o1, o2) {
                 var t1 = o1.LogicalName.toLowerCase(), t2 = o2.LogicalName.toLowerCase();
                 return t1 > t2 ? 1 : t1 < t2 ? -1 : 0;
             });
-
-
+            ArrEntitiesLogicalName = data.value;
             data.value.forEach(function (item) {
-                ITLecHTMLUtilsControl.AddItem_Option("allEntitiesOptionSet", item.LogicalName, item.LogicalName);
+                ITLecHTMLUtilsControlOption.AddItem("allEntitiesOptionSet", item.LogicalName, item.LogicalName);
             });
         }
 
@@ -38,8 +33,25 @@
             var val = ITLecXrmUtilsControl.GetControlValue(ITLecXrmUtilsWebResource.GetParam("fieldName"));
             if (val)
             {
-                ITLecHTMLUtilsControl.SetSelectedItem_Option("allEntitiesOptionSet", val);
+                ITLecHTMLUtilsControlOption.SetSelectedItem("allEntitiesOptionSet", val);
             }
+        }
+
+        function filterOption()
+        {
+            ITLecHTMLUtilsControlOption.Clear("allEntitiesOptionSet");
+
+            if (ArrEntitiesLogicalName == null) {
+                ArrEntitiesLogicalName = ITLecXrmUtilsMetaData.GetAllEntitiesLogicalName();
+            }
+
+            ArrEntitiesLogicalName.forEach(function (item) {
+                var userInputLowerCase = ITLecHTMLUtilsControl.GetValue("txtFilter").toLowerCase();
+
+                if (item.LogicalName.toLowerCase().indexOf(userInputLowerCase) != -1) {
+                    ITLecHTMLUtilsControlOption.AddItem("allEntitiesOptionSet", item.LogicalName, item.LogicalName);
+                }
+            });
         }
     </script>
 </head>
@@ -51,9 +63,9 @@
         }
     </script>
     <form>
-        <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for names.." title="Type in a name">
-
-        <select id="allEntitiesOptionSet" size="4" onchange="allEntitiesOptionSet_OnChange()"></select>
+        <input type="text" id="txtFilter" onkeyup="filterOption()" placeholder="Search for entity..." title="Type in a name"  style="width: 250px">
+        <br />
+        <select id="allEntitiesOptionSet" size="4" onchange="allEntitiesOptionSet_OnChange()"  style="width: 250px"></select>
     </form>
 
 </body>
