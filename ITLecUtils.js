@@ -84,7 +84,7 @@ var ITLecXrmUtilsWebResource = {
     GetParam: function (paramName) {
         var vals = new Array();
         if (location.search != "") {
-            vals = location.search.substr(1).split("&amp;");
+            vals = location.search.substr(1).split("&");
             for (var i in vals) {
                 vals[i] = vals[i].replace(/\+/g, " ").split("=");
             }
@@ -103,7 +103,7 @@ var ITLecXrmUtilsWebResource = {
         if (datavalue != "") {
             var vals = new Array();
 
-            vals = decodeURIComponent(datavalue).split("&amp;");
+            vals = decodeURIComponent(datavalue).split("&");
             for (var i in vals) {
                 vals[i] = vals[i].replace(/\+/g, " ").split("=");
 
@@ -292,4 +292,40 @@ var ITLecXrmUtilsTextBox = {
     }
 
 
+};
+
+var ITLecXrmUtilsLookup =
+    {
+       OpenLookup: function () {
+            var lookupurl = "/_controls/lookup/lookupinfo.aspx?" +
+                "AllowFilterOff=0&DefaultType=2&DisableQuickFind=0&DisableViewPicker=0&IsInlineMultiLookup=0" +
+                "&LookupStyle=single&ShowNewButton=1&ShowPropButton=1&browse=false&objecttypes=2";
+
+            var dialogUrl = ITLecXrmUtilsURL.GetClientURL() + lookupurl;
+
+
+            //Set the Dialog Width and Height
+
+            var DialogOptions = new Xrm.DialogOptions();
+
+            //Set the Width
+
+            DialogOptions.width = 500;
+
+            //Set the Height
+
+            DialogOptions.height = 550;
+
+
+
+            //open dialog
+            Xrm.Internal.openDialog(dialogUrl, DialogOptions, null, null, ITLecXrmUtilsLookup.OpenLookup_CallBack);
+           
+        },
+       OpenLookup_CallBack: function (result) {
+
+          for (var i = 0; i < result.items.length; i++) {
+              alert(result.items[i].typename + " with name " + result.items[i].name + " and id " + result.items[i].id + " was selected in lookup");
+          }
+      }
 };

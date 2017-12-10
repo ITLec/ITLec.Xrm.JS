@@ -1,0 +1,151 @@
+<html>
+<head>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+
+        table, td, th {
+            border: 1px solid black;
+        }
+    </style>
+    <script src="../ClientGlobalContext.js.aspx" type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="itlec_utils.js" type="text/javascript"></script>
+
+    <script>
+        var jsonList = null;
+
+        var jsonServiceUrl = "";
+        function ConvertJSON2HTML() {
+
+            $.support.cors = true;
+            $.getJSON(jsonServiceUrl, ConvertJSON2HTML_RetrieveReqCallBack)
+                    //.complete(function () { alert('y'); })
+                 .error(function () {
+                     $("#msgDiv").show();
+                     $("#msgLbl").html('No Data');
+                 });
+
+        }
+
+        function ConvertJSON2HTML_RetrieveReqCallBack(retrieveReq) {
+            if (retrieveReq != "" /* complete */) {
+                jsonList = retrieveReq;
+                buildHtmlTable();
+                $("#msgDiv").hide();
+            }
+            else {
+                $("#msgDiv").show();
+                $("#msgLbl").html('No Data');
+
+            }
+        }
+        // Builds the HTML Table out of jsonList json data from Ivy restful service.
+        function buildHtmlTable() {
+
+            var columns = addAllColumnHeaders(jsonList);
+
+            for (var i = 0 ; i < jsonList.length ; i++) {
+                var row$ = $('<tr/>');
+                var rowColor = '';
+                for (var colIndex = 0 ; colIndex < columns.length ; colIndex++) {
+                    var cellValue = jsonList[i][columns[colIndex]];
+
+                    if (cellValue == null) { cellValue = ""; }
+                    if (columns[colIndex] != '_color') {
+                        row$.append($('<td/>').html(cellValue));
+                    }
+                    else {
+                        row$.append($('<td  style="display:none;" />').html(cellValue));
+                        rowColor = cellValue;
+                    }
+                }
+                if (rowColor && row$[0]) {
+
+                    row$[0].bgColor = rowColor;
+                }
+                $("#excelDataTable").append(row$);
+            }
+        }
+
+        // Adds a header row to the table and returns the set of columns.
+        // Need to do union of keys from all records as some records may not contain
+        // all records
+        function addAllColumnHeaders(jsonList) {
+            var columnSet = [];
+            var headerTr$ = $('<tr/>');
+
+            for (var i = 0 ; i < jsonList.length ; i++) {
+                var rowHash = jsonList[i];
+                for (var key in rowHash) {
+                    if ($.inArray(key, columnSet) == -1) {
+                        if (key != "_color") {
+                            columnSet.push(key);
+                            headerTr$.append($('<th/>').html(key));
+                        }
+                        else {
+                            columnSet.push(key);
+                            headerTr$.append($('<th  style="display:none;"/>').html(key));
+                        }
+                    }
+                }
+            }
+            $("#excelDataTable").append(headerTr$);
+
+            return columnSet;
+        }
+
+
+        function htmlPage_OnLoad() {
+            //   jsonServiceUrl  = "http://172.16.10.2:4433/AX/GetPaidInvoice?custId=1062393374";
+
+            jsonServiceUrl = ITLecXrmUtilsWebResource.GetParam('jsonUrl');
+
+            if (jsonServiceUrl) {
+                var parameters = ITLecXrmUtilsWebResource.GetParam('parameters');
+                if (parameters) {
+                    var paramArray = new Array();
+                    paramArray = parameters.split(",");
+                    for (param in paramArray) {
+                        if (param == 0) {
+                            jsonServiceUrl = jsonServiceUrl + '?';
+                        }
+                        else {
+                            jsonServiceUrl = jsonServiceUrl + '&';
+                        }
+                        var keyValue = paramArray[param].split("::");
+                        var paramKey = keyValue[0];
+                        //todo
+                        jsonServiceUrl = jsonServiceUrl + paramKey + '=';
+
+                        var paramValue = keyValue[1];
+
+                        var controlValue = ITLecXrmUtilsControl.GetControlValue(paramValue);
+
+                        jsonServiceUrl = jsonServiceUrl + controlValue;
+
+                    }
+                }
+                ConvertJSON2HTML();
+            }
+
+        }
+
+        window.onload = function () {
+            htmlPage_OnLoad();
+        };
+    </script>
+
+    <meta charset="utf-8">
+</head>
+<body>
+    <div id="msgDiv">
+        <h1>
+            <label id="msgLbl">Loading ....</label>
+        </h1>
+    </div>
+    <table id="excelDataTable"></table>
+
+</body>
+</html>
