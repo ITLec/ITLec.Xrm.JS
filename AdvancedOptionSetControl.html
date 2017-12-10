@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="../ClientGlobalContext.js.aspx" type="text/javascript"></script>
+  <script src="itlec_utils.js" type="text/javascript"></script>
+
+
+  <script type="text/javascript">
+
+    function FillOptionSet() {
+      var itemsStr = ITLecXrmUtilsWebResource.GetParam("itemsArr");
+      var itemsArr = itemsStr.split(",");
+      itemsArr.sort();
+      var optionSet = document.getElementById("itemsOptionSet");
+      for (var item in itemsArr) {
+        var keyValue = itemsArr[item].split(":");
+
+        var option = document.createElement("option");
+        option.value = keyValue[0];
+        option.text = keyValue[1];
+        optionSet.add(option);
+      }
+    }
+
+    function itemsOptionSet_OnChange() {
+      var val = document.getElementById("itemsOptionSet").value;
+      ITLecXrmUtilsControl.SetControlValue(ITLecXrmUtilsWebResource.GetParam("fieldName"), val);
+    }
+
+    function SetOptionSet() {
+      var val = ITLecXrmUtilsControl.GetControlValue(ITLecXrmUtilsWebResource.GetParam("fieldName"));
+      if (val) {
+        ITLecHTMLUtilsControlOption.SetSelectedItem("itemsOptionSet", val);
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <script>
+    window.onload = function () {
+      FillOptionSet();
+      SetOptionSet();
+    }
+  </script>
+  <form>
+    <!--<input type="text" id="txtFilter" onkeyup="filterOption()" placeholder="Search ..." title="Type in a name" style="width: 250px">
+    <br />-->
+    <select id="itemsOptionSet" size="1" onchange="itemsOptionSet_OnChange()" style="width: 250px"></select>
+  </form>
+</body>
+
+</html>
