@@ -1,4 +1,3 @@
-
 var ITLecXrmUtils = {
 
     GetXrm: function () {
@@ -28,21 +27,37 @@ var ITLecXrmUtilsURL = {
         var oDataPath = serverUrl + "/XRMServices/2011/OrganizationData.svc";
         return oDataPath;
     },
-    GetAllEntitiesLogicalNameAPIUrl: function ()
-    {
-
+    GetOdataURL: function () {
         var serverURL = ITLecXrmUtilsURL.GetClientURL();
+        var url =  serverURL + "/api/data/v8.0";
+        return url;
+    },
+    GetAllEntitiesLogicalNameAPIUrl: function () {
 
-        var allEntitiesURL = serverURL + "/api/data/v8.0/EntityDefinitions?$select=LogicalName";
+        var odataURL = ITLecXrmUtilsURL.GetOdataURL();
+
+        var allEntitiesURL = odataURL + "/EntityDefinitions?$select=LogicalName";
 
         return allEntitiesURL;
     }
 };
+var ITLecXrmUtilsConverter = {
+    FromLogicalNameToObjectTypeCode: function(logicalName) {
+        var filterURL = ITLecXrmUtilsURL.GetOdataURL() + "/EntityDefinitions?$select=ObjectTypeCode&$filter=LogicalName eq '" + logicalName + "'";
 
+        var data = ITLecHTTPUtilsRequest.GetODataObjectResult(filterURL);
+
+        return data.value[0].ObjectTypeCode;
+    }
+};
 var ITLecXrmUtilsEntity = {
 
     GetCurrentId: function () {
         return ITLecXrmUtils.GetXrm().Page.data.entity.getId();
+    },
+    GetCurrentEntityName: function () {
+
+        return Xrm.Page.data.entity.getEntityName();
     }
 };
 
@@ -50,20 +65,17 @@ var ITLecXrmUtilsMetaData = {
 
     ///GetAllEntitiesLogicalName("FunctionName")
     /* Function Example
-
         function fillOptionSet_CallBack(data) {
-
         }
     */
-   //  ArrAllEntitiesLogicalName,
+    //  ArrAllEntitiesLogicalName,
     GetAllEntitiesLogicalNameAsync: function (GetAllEntitiesLogicalName_CallBack) {
-        
+
         var allEntitiesURL = ITLecXrmUtilsURL.GetAllEntitiesLogicalNameAPIUrl();
-        
+
         ITLecHTTPUtilsRequest.GetAsync(allEntitiesURL, GetAllEntitiesLogicalName_CallBack);
     },
-    GetAllEntitiesLogicalName: function ()
-    {
+    GetAllEntitiesLogicalName: function () {
         //if (ArrAllEntitiesLogicalName)
         var allEntitiesURL = ITLecXrmUtilsURL.GetAllEntitiesLogicalNameAPIUrl();
 
@@ -141,9 +153,8 @@ var ITLecHTMLUtilsControlOption = {
         var element = document.getElementById(optionId);
         element.value = valueToSelect;
     },
-    Clear: function (optionId)
-    {
-       var optionControl= document.getElementById(optionId);
+    Clear: function (optionId) {
+        var optionControl = document.getElementById(optionId);
         var i;
         for (i = optionControl.options.length - 1; i >= 0; i--) {
             optionControl.remove(i);
@@ -153,8 +164,7 @@ var ITLecHTMLUtilsControlOption = {
 
 var ITLecHTMLUtilsControl =
     {
-        GetValue: function (controlId)
-        {
+        GetValue: function (controlId) {
             var val = document.getElementById(controlId).value;
             return val;
         }
@@ -162,7 +172,7 @@ var ITLecHTMLUtilsControl =
 var ITLecHTTPUtilsRequest = {
 
     GetODataResponseText: function (url) {
-        
+
         if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
             xmlhttp = new XMLHttpRequest();
         }
@@ -218,10 +228,10 @@ var ITLecHTTPUtilsRequest = {
 };
 
 var ITLecXrmUtilsTextBox = {
-    
+
 
     SetAutoComplete: function (fieldName, arr) {
-        
+
 
         /*
         arr = [
@@ -252,7 +262,7 @@ var ITLecXrmUtilsTextBox = {
                 var userInputLowerCase = userInput.toLowerCase();
                 for (i = 0; i < arr.length; i++) {
                     // if (userInputLowerCase === arr[i].name.substring(0, userInputLowerCase.length).toLowerCase()) {
-                    if (arr[i].name.toLowerCase().indexOf( userInputLowerCase)!= -1 ) {
+                    if (arr[i].name.toLowerCase().indexOf(userInputLowerCase) != -1) {
                         resultSet.results.push({
                             id: i,
                             fields: [arr[i].name]
@@ -277,18 +287,18 @@ var ITLecXrmUtilsTextBox = {
     },
 
     SetAutoCompleteWithEntityNames: function (fieldName) {
-        
+
         var arr = ITLecXrmUtilsMetaData.GetAllEntitiesLogicalName();
 
-       var  newArr = new Array();
+        var newArr = new Array();
 
-       arr.forEach(function (item) {
+        arr.forEach(function (item) {
             var obj = new Object();
             obj.code = item.LogicalName;
             obj.name = item.LogicalName;
             newArr.push(obj);
-       });
-       ITLecXrmUtilsTextBox.SetAutoComplete(fieldName, newArr);
+        });
+        ITLecXrmUtilsTextBox.SetAutoComplete(fieldName, newArr);
     }
 
 
@@ -296,7 +306,7 @@ var ITLecXrmUtilsTextBox = {
 
 var ITLecXrmUtilsLookup =
     {
-       OpenLookup: function () {
+        OpenLookup: function () {
             var lookupurl = "/_controls/lookup/lookupinfo.aspx?" +
                 "AllowFilterOff=0&DefaultType=2&DisableQuickFind=0&DisableViewPicker=0&IsInlineMultiLookup=0" +
                 "&LookupStyle=single&ShowNewButton=1&ShowPropButton=1&browse=false&objecttypes=2";
@@ -320,12 +330,20 @@ var ITLecXrmUtilsLookup =
 
             //open dialog
             Xrm.Internal.openDialog(dialogUrl, DialogOptions, null, null, ITLecXrmUtilsLookup.OpenLookup_CallBack);
-           
-        },
-       OpenLookup_CallBack: function (result) {
 
-          for (var i = 0; i < result.items.length; i++) {
-              alert(result.items[i].typename + " with name " + result.items[i].name + " and id " + result.items[i].id + " was selected in lookup");
-          }
-      }
-};
+        },
+        OpenLookup_CallBack: function (result) {
+
+            for (var i = 0; i < result.items.length; i++) {
+                alert(result.items[i].typename + " with name " + result.items[i].name + " and id " + result.items[i].id + " was selected in lookup");
+            }
+        }
+    };
+
+var ITLecXrmUtilsAlert =
+    {
+        ShowEval: function (code) {
+            var str = eval(code);
+            alert(str);
+        }
+    };
