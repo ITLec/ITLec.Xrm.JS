@@ -10,6 +10,19 @@ var ITLecXrmUtils = {
 
     GetWindowParent: function () {
         return window.parent;
+    },
+    GetMscrm: function () {
+
+        return typeof Mscrm != "undefined" && typeof Mscrm.Utilities != "undefined" ? Mscrm : ITLecXrmUtils.GetWindowParent().Mscrm;
+    },
+    SetLookupObjectsWithCallback: function (val1, val2, val3, val4, val5, val6,val7,val8,val9,val10,val11,val12,val13, val14, val15, val16, val17, val18, val19, val20, val21, val22, val23, val24, val25) {
+      
+        if (typeof LookupObjectsWithCallback != "undefined") {
+            LookupObjectsWithCallback(val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, val12, val13, val14, val15, val16, val17, val18, val19, val20, val21, val22, val23, val24, val25);
+        } else {
+            ITLecXrmUtils.GetWindowParent().LookupObjectsWithCallback(val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, val12, val13, val14, val15, val16, val17, val18, val19, val20, val21, val22, val23, val24, val25);
+        }
+        
     }
 };
 
@@ -39,6 +52,14 @@ var ITLecXrmUtilsURL = {
         var allEntitiesURL = odataURL + "/EntityDefinitions?$select=LogicalName";
 
         return allEntitiesURL;
+    },
+    GetViewAPIUrl: function (viewName) {
+
+        var odataURL = ITLecXrmUtilsURL.GetOdataURL();
+
+        var url = odataURL + "/savedqueries?$top=1&$select=fetchxml,savedqueryid,layoutxml,name,returnedtypecode&$filter=name eq '" + viewName+"'";
+
+        return url;
     }
 };
 var ITLecXrmUtilsConverter = {
@@ -169,6 +190,7 @@ var ITLecHTMLUtilsControl =
             return val;
         }
     };
+
 var ITLecHTTPUtilsRequest = {
 
     GetODataResponseText: function (url) {
@@ -304,8 +326,72 @@ var ITLecXrmUtilsTextBox = {
 
 };
 
+
+
 var ITLecXrmUtilsLookup =
     {
+
+        /*
+        ITLecXrmUtilsLookup.OpenLookupFilter('Account Advanced Find View', AlertItems);
+        function AlertItems(lookupItems)
+        {
+            if (lookupItems != null) {
+                if (lookupItems.items.length > 0) {
+                    var lookupItemName = lookupItems.items[0].name;
+                    var lookupItemId = lookupItems.items[0].id;
+                    alert(lookupItemId);
+                }
+            }
+        }
+        */
+        OpenLookupFilterByViewName: function (viewName, functionName) {
+
+            var filterURL = ITLecXrmUtilsURL.GetViewAPIUrl(viewName);
+
+            var data = ITLecHTTPUtilsRequest.GetODataObjectResult(filterURL);
+
+            var objectCode = ITLecXrmUtilsConverter.FromLogicalNameToObjectTypeCode(data.value[0].returnedtypecode);
+
+            var fetchxml = data.value[0].fetchxml;
+
+
+            var layout = data.value[0].layoutxml;
+
+            var viewId = data.value[0].savedqueryid;
+
+
+            //creates the custom view object
+            var customView = data.value[0];
+                /*{
+                fetchXml: fetchxml,
+                id: viewId,
+                layoutXml: layout,
+                name: "Contact Lookup",
+                recordType: objectCode,
+                Type: 0
+            };*/
+
+
+            ITLecXrmUtils.GetMscrm().Utilities.returnLookupItems = function (lookupItems, lookupField, bPopulateLookup, callbackReference) {
+                //Checks the itmem selected and add it to the grid
+                if (lookupItems != null) {
+                    if (lookupItems.items.length > 0) {
+                        functionName(lookupItems);
+                    //    window[functionName](lookupItems);
+                    /*    var lookupItemName = lookupItems.items[0].name;
+                        alert(lookupItemName);
+                        var lookupItemId = lookupItems.items[0].id;*/
+                    }
+                }
+            };
+            //Creates the call back function object
+            var callbackFunctionObject = ITLecXrmUtils.GetMscrm().Utilities.createCallbackFunctionObject('returnLookupItems', ITLecXrmUtils.GetMscrm().Utilities, [null, null], false);
+            //pops the lookup window with our view injected
+            ITLecXrmUtils.SetLookupObjectsWithCallback(callbackFunctionObject, null, "single", objectCode, 0, null, "", "0", null, null, null, null, null, viewId, [customView], null, null, null, null, "0", "0", "0", null, null, null);
+
+        }
+
+        /*
         OpenLookup: function () {
             var lookupurl = "/_controls/lookup/lookupinfo.aspx?" +
                 "AllowFilterOff=0&DefaultType=2&DisableQuickFind=0&DisableViewPicker=0&IsInlineMultiLookup=0" +
@@ -338,6 +424,7 @@ var ITLecXrmUtilsLookup =
                 alert(result.items[i].typename + " with name " + result.items[i].name + " and id " + result.items[i].id + " was selected in lookup");
             }
         }
+        */
     };
 
 var ITLecXrmUtilsAlert =
