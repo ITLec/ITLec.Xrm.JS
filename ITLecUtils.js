@@ -17,13 +17,13 @@ var ITLecXrmUtils = {
     },
     SetLookupObjectsWithCallback: function (callbackReference, lookupField, lookupStyle,   // "single" or "multi"
         val4, val5, val6, val7, val8, val9, val10, val11, val12, val13, val14, val15, val16, val17, val18, val19, val20, val21, val22, val23, val24, val25) {
-      
+
         if (typeof LookupObjectsWithCallback != "undefined") {
             LookupObjectsWithCallback(callbackReference, lookupField, lookupStyle, val4, val5, val6, val7, val8, val9, val10, val11, val12, val13, val14, val15, val16, val17, val18, val19, val20, val21, val22, val23, val24, val25);
         } else {
             ITLecXrmUtils.GetWindowParent().LookupObjectsWithCallback(callbackReference, lookupField, lookupStyle, val4, val5, val6, val7, val8, val9, val10, val11, val12, val13, val14, val15, val16, val17, val18, val19, val20, val21, val22, val23, val24, val25);
         }
-        
+
     }
 };
 
@@ -43,7 +43,7 @@ var ITLecXrmUtilsURL = {
     },
     GetOdataURL: function () {
         var serverURL = ITLecXrmUtilsURL.GetClientURL();
-        var url =  serverURL + "/api/data/v8.0";
+        var url = serverURL + "/api/data/v8.0";
         return url;
     },
     GetAllEntitiesLogicalNameAPIUrl: function () {
@@ -58,13 +58,21 @@ var ITLecXrmUtilsURL = {
 
         var odataURL = ITLecXrmUtilsURL.GetOdataURL();
 
-        var url = odataURL + "/savedqueries?$top=1&$select=fetchxml,savedqueryid,layoutxml,name,returnedtypecode&$filter=name eq '" + viewName+"'";
+        var url = odataURL + "/savedqueries?$top=1&$select=fetchxml,savedqueryid,layoutxml,name,returnedtypecode&$filter=name eq '" + viewName + "'";
+
+        return url;
+    },
+    GetAllSdkMessagesUrl: function () {
+
+        var odataURL = ITLecXrmUtilsURL.GetOdataURL();
+
+        var url = odataURL + "/sdkmessages?$select=sdkmessageid,name&$filter=isprivate eq false";
 
         return url;
     }
 };
 var ITLecXrmUtilsConverter = {
-    FromLogicalNameToObjectTypeCode: function(logicalName) {
+    FromLogicalNameToObjectTypeCode: function (logicalName) {
         var filterURL = ITLecXrmUtilsURL.GetOdataURL() + "/EntityDefinitions?$select=ObjectTypeCode&$filter=LogicalName eq '" + logicalName + "'";
 
         var data = ITLecHTTPUtilsRequest.GetODataObjectResult(filterURL);
@@ -106,6 +114,20 @@ var ITLecXrmUtilsMetaData = {
 
         data.value.sort(function (o1, o2) {
             var t1 = o1.LogicalName.toLowerCase(), t2 = o2.LogicalName.toLowerCase();
+            return t1 > t2 ? 1 : t1 < t2 ? -1 : 0;
+        });
+
+        return data.value;
+    },
+    GetAllSdkMessageslName: function () {//tobe tested
+        //if (ArrAllEntitiesLogicalName)
+        var allSdkMSGUrl = ITLecXrmUtilsURL.GetAllSdkMessagesUrl();
+
+        var data = ITLecHTTPUtilsRequest.GetODataObjectResult(allSdkMSGUrl);
+
+
+        data.value.sort(function (o1, o2) {
+            var t1 = o1.name.toLowerCase(), t2 = o2.name.toLowerCase();
             return t1 > t2 ? 1 : t1 < t2 ? -1 : 0;
         });
 
@@ -322,6 +344,21 @@ var ITLecXrmUtilsTextBox = {
             newArr.push(obj);
         });
         ITLecXrmUtilsTextBox.SetAutoComplete(fieldName, newArr);
+    },
+
+    SetAutoCompleteWithAllSdkMSGNames: function (fieldName) {
+
+        var arr = ITLecXrmUtilsMetaData.GetAllSdkMessageslName();
+
+        var newArr = new Array();
+
+        arr.forEach(function (item) {
+            var obj = new Object();
+            obj.code = item.sdkmessageid;
+            obj.name = item.name;
+            newArr.push(obj);
+        });
+        ITLecXrmUtilsTextBox.SetAutoComplete(fieldName, newArr);
     }
 
 
@@ -363,14 +400,14 @@ var ITLecXrmUtilsLookup =
 
             //creates the custom view object
             var customView = data.value[0];
-                /*{
-                fetchXml: fetchxml,
-                id: viewId,
-                layoutXml: layout,
-                name: "Contact Lookup",
-                recordType: objectCode,
-                Type: 0
-            };*/
+            /*{
+            fetchXml: fetchxml,
+            id: viewId,
+            layoutXml: layout,
+            name: "Contact Lookup",
+            recordType: objectCode,
+            Type: 0
+        };*/
 
 
             ITLecXrmUtils.GetMscrm().Utilities.returnLookupItems = function (lookupItems, lookupField, bPopulateLookup, callbackReference) {
@@ -378,10 +415,10 @@ var ITLecXrmUtilsLookup =
                 if (lookupItems != null) {
                     if (lookupItems.items.length > 0) {
                         functionName(lookupItems);
-                    //    window[functionName](lookupItems);
-                    /*    var lookupItemName = lookupItems.items[0].name;
-                        alert(lookupItemName);
-                        var lookupItemId = lookupItems.items[0].id;*/
+                        //    window[functionName](lookupItems);
+                        /*    var lookupItemName = lookupItems.items[0].name;
+                            alert(lookupItemName);
+                            var lookupItemId = lookupItems.items[0].id;*/
                     }
                 }
             };
@@ -397,30 +434,17 @@ var ITLecXrmUtilsLookup =
             var lookupurl = "/_controls/lookup/lookupinfo.aspx?" +
                 "AllowFilterOff=0&DefaultType=2&DisableQuickFind=0&DisableViewPicker=0&IsInlineMultiLookup=0" +
                 "&LookupStyle=single&ShowNewButton=1&ShowPropButton=1&browse=false&objecttypes=2";
-
             var dialogUrl = ITLecXrmUtilsURL.GetClientURL() + lookupurl;
-
-
             //Set the Dialog Width and Height
-
             var DialogOptions = new Xrm.DialogOptions();
-
             //Set the Width
-
             DialogOptions.width = 500;
-
             //Set the Height
-
             DialogOptions.height = 550;
-
-
-
             //open dialog
             Xrm.Internal.openDialog(dialogUrl, DialogOptions, null, null, ITLecXrmUtilsLookup.OpenLookup_CallBack);
-
         },
         OpenLookup_CallBack: function (result) {
-
             for (var i = 0; i < result.items.length; i++) {
                 alert(result.items[i].typename + " with name " + result.items[i].name + " and id " + result.items[i].id + " was selected in lookup");
             }
