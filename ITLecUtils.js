@@ -179,8 +179,39 @@ var ITLecXrmUtilsControl = {
         return val;
     },
     SetControlValue: function (control, value) {
-        ITLecXrmUtils.GetXrm().Page.getAttribute(control).setValue(value);
+
+
+        var controlType = ITLecXrmUtilsControl.GetAttributeControlType(control);
+        var newValue = null;
+        if (controlType == "string") {
+            newValue = value.toString()
+        }
+        else
+        {
+            newValue = value;
+        }
+
+        ITLecXrmUtils.GetXrm().Page.getAttribute(control).setValue(newValue);
+
+
         ITLecXrmUtils.GetXrm().Page.getAttribute(control).setSubmitMode("always");
+    },
+    GetAttributeControlType: function (control) {
+        var retVal = "";
+        //Retun standard, iframe, lookup, optionset, subgrid, webresource, notes, timercontrol, kbsearch, customcontrol: <namespace>.<name>, customcontrol: <namespace>.<name>, customsubgrid:<namespace>.<name>
+        var controlType = ITLecXrmUtils.GetXrm().Page.getControl(control).getControlType();
+
+        if (controlType == "standard")
+        {
+            //Return will be string "boolean,datetime,decimal,double,integer,lookup,memo,money,optionset,string"
+            var typeStr = ITLecXrmUtils.GetXrm().Page.getAttribute(control).getAttributeType();
+            retVal = typeStr;
+        }
+        else
+        {
+            retVal = controlType;
+        }
+        return retVal.toLowerCase();
     }
 };
 
